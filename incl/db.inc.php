@@ -27,6 +27,7 @@ require_once __DIR__ . "/modules/choreManager.php";
 require_once __DIR__ . "/modules/quantityManager.php";
 require_once __DIR__ . "/modules/barcodeFederation.php";
 require_once __DIR__ . "/modules/dbUpgrade.php";
+require_once __DIR__ . "/logging.inc.php";
 
 
 //States to tell the script what to do with the barcodes that were scanned
@@ -146,8 +147,10 @@ class DatabaseConnection {
     private $db;
     private static $_ConnectionInstance = null;
     private static $_StartingConnection = false;
+    private \Monolog\Logger $logger;
 
     private function __construct() {
+        $this->logger = bb_logger('db');
         $this->initDb();
     }
 
@@ -185,6 +188,8 @@ class DatabaseConnection {
      */
     private function initDb(): void {
         global $CONFIG;
+
+        $this->logger->debug("Initializing database");
 
         self::checkPermissions();
         $this->db = new SQLite3($CONFIG->DATABASE_PATH);
@@ -242,12 +247,14 @@ class DatabaseConnection {
         global $CONFIG;
         if (file_exists($CONFIG->DATABASE_PATH)) {
             if (!is_writable($CONFIG->DATABASE_PATH)) {
+                $this->logger->error("DB Error: Existing DB not writable");
                 showErrorNotWritable("DB Error: DB_Not_Writable");
             }
         } else {
             DbUpgrade::createDbDirectory();
             DbUpgrade::checkAndMoveIfOldDbLocation();
             if (!is_writable(dirname($CONFIG->DATABASE_PATH))) {
+                $this->logger->error("DB Error: New/Moved DB not writable");
                 showErrorNotWritable("DB Error: Not_Writable");
             }
         }
@@ -269,6 +276,7 @@ class DatabaseConnection {
             else
                 return $state;
         } else {
+            $this->logger->error("DB Error: No state found");
             die("DB Error");
         }
     }
@@ -572,6 +580,7 @@ class DatabaseConnection {
 
 
     public function saveError(string $errorMessage, bool $isFatal = true): void {
+        $this->logger->error($errorMessage, ['isFatal' => $isFatal]);
         $verboseError = '<span style="color: red;">' . sanitizeString($errorMessage) . '</span> Please check your URL and API key in the settings menu!';
         $this->saveLog($verboseError, false, true);
         if ($isFatal) {
@@ -591,6 +600,8 @@ class DatabaseConnection {
      * @throws DbConnectionDuringEstablishException
      */
     public function saveLog(string $log, bool $isVerbose = false, bool $isError = false, bool $isDebug = false): void {
+        $this->logger->debug($log);
+
         if ($isVerbose == false || BBConfig::getInstance()["MORE_VERBOSE"] == true) {
             $date = date('Y-m-d H:i:s');
             if ($isError || $isDebug) {
