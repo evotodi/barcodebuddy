@@ -79,7 +79,7 @@ function getHtmlActionTable(WebUiGenerator $webUi): void
     $html->addHtml("<div id=\"action-barcodes\" class=\"flex-settings\" data-actions='" . json_encode($actions) . "'>");
 
     foreach ($actions as $key => $action) {
-        $html->addDiv("<img id=\"action-$key\" alt=\"$key\"/>", null, "flex-settings-child");
+        $html->addDiv("<a href=\"#\" onclick=\"downloadBarcode('action-$key'); return false;\"><img id=\"action-$key\" alt=\"$key\" data-name=\"{$action['name']}\"/></a>", null, "flex-settings-child");
 
     }
 
@@ -100,7 +100,7 @@ function getHtmlLocationTable(WebUiGenerator $webUi): void
     $html->addHtml("<div id=\"location-barcodes\" class=\"flex-settings\" data-locations='" . json_encode($locations) . "' data-barcode='" . $config['BARCODE_TXFR'] . "'>");
 
     foreach ($locations as $location) {
-        $html->addDiv("<img id=\"location-$location->id\" alt=\"$location->id\"/>", null, "flex-settings-child");
+        $html->addDiv("<a href=\"#\" onclick=\"downloadBarcode('location-$location->id'); return false;\"><img id=\"location-$location->id\" alt=\"$location->id\" data-name=\"{$location->name}\"/></a>", null, "flex-settings-child");
 
     }
 
@@ -125,7 +125,7 @@ function getHtmlQuantityTable(WebUiGenerator $webUi): void
     $html->addHtml("<div id=\"quantity-barcodes\" class=\"flex-settings\" data-start-qty='$startQty' data-end-qty='$endQty' data-barcode='" . $config['BARCODE_Q'] . "'>");
 
     for ($i = $startQty; $i <= $endQty; $i++) {
-        $html->addDiv("<img id=\"quantity-$i\" alt=\"$i\"/>", null, "flex-settings-child");
+        $html->addDiv("<a href=\"#\" onclick=\"downloadBarcode('quantity-$i'); return false;\"><img id=\"quantity-$i\" alt=\"$i\" data-name=\"Quantity $i\"/></a>", null, "flex-settings-child");
     }
 
     $html->addHtml('</div>');
