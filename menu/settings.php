@@ -117,6 +117,7 @@ function getHtmlSettingsGeneral(): string {
     $html->addCheckbox("SAVE_BARCODE_NAME", "Save name from lookup to barcode", $config["SAVE_BARCODE_NAME"], false, false);
     $html->addCheckbox("MORE_VERBOSE", "More verbose logs", $config["MORE_VERBOSE"], false, false);
     $html->addLineBreak(2);
+    $html->addButton("SHOW_ACT_BARCODES", "Show action barcodes", "showActionBarcodes()", true);
     $html->addButton("SHOW_TXFR_BARCODES", "Show transfer barcodes", "showTransferBarcodes()", true);
     $html->addButton("SHOW_QTY_BARCODES", "Show quantity barcodes", "showQuantityBarcodes()", true);
     $html->addLineBreak(2);

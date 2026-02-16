@@ -19,19 +19,20 @@ require_once __DIR__ . "/incl/db.inc.php";
 require_once __DIR__ . "/incl/webui.inc.php";
 require_once __DIR__ . "/incl/api.inc.php";
 
+const MODE_ACTION   = 'act';
 const MODE_QUANTITY = 'qty';
 const MODE_LOCATION = 'loc';
 
 $CONFIG->checkIfAuthenticated(true, true);
 
 // Get mode and validate it
-$mode = MODE_LOCATION;
+$mode = MODE_ACTION;
 if (isset($_GET)) {
     if (isset($_GET["mode"])) {
         $mode = $_GET["mode"];
     }
 }
-if (!in_array($mode, [MODE_QUANTITY, MODE_LOCATION])) {
+if (!in_array($mode, [MODE_ACTION ,MODE_QUANTITY, MODE_LOCATION])) {
     die("Invalid mode");
 }
 
@@ -45,6 +46,9 @@ $webUi->addBaseHeader(
     "<script src=\"/incl/js/JsBarcode.all.min.js\"></script>\n<script src=\"/incl/js/scripts_barcodes.js\"></script>");
 
 switch ($mode) {
+    case MODE_ACTION:
+        getHtmlActionTable($webUi);
+        break;
     case MODE_QUANTITY:
         getHtmlQuantityTable($webUi);
         break;
@@ -55,6 +59,36 @@ switch ($mode) {
 
 $webUi->printHtml();
 
+function getHtmlActionTable(WebUiGenerator $webUi): void
+{
+    $config = BBConfig::getInstance();
+
+    $actions = [
+        1 => ['barcode' => $config['BARCODE_C'], 'name' => 'Consume'],
+        2 => ['barcode' => $config['BARCODE_CS'], 'name' => 'Consume (spoiled)'],
+        3 => ['barcode' => $config['BARCODE_CA'], 'name' => 'Consume All'],
+        4 => ['barcode' => $config['BARCODE_P'], 'name' => 'Purchase'],
+        5 => ['barcode' => $config['BARCODE_O'], 'name' => 'Open'],
+        6 => ['barcode' => $config['BARCODE_GS'], 'name' => 'Inventory'],
+        7 => ['barcode' => $config['BARCODE_AS'], 'name' => 'Add to Shopping List'],
+    ];
+
+
+    // Generate the HTML
+    $html   = new UiEditor(true, null, "barcodes");
+    $html->addHtml("<div id=\"action-barcodes\" class=\"flex-settings\" data-actions='" . json_encode($actions) . "'>");
+
+    foreach ($actions as $key => $action) {
+        $html->addDiv("<img id=\"action-$key\" alt=\"$key\"/>", null, "flex-settings-child");
+
+    }
+
+    $html->addHtml('</div>');
+    $webUi->addHtml($html->getHtml());
+
+    // Generate the JS
+    $webUi->addScript("generateActionBarcodes();");
+}
 
 function getHtmlLocationTable(WebUiGenerator $webUi): void
 {
