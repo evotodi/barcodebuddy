@@ -78,8 +78,6 @@ function checkForMissingConstants(): void {
         "SEARCH_ENGINE"                => "https://google.com/search?q=",
         "BASEURL"                      => "/",
         "DEFAULT_LOOKUP_LANGUAGE"      => "en",
-        "LOG_LEVEL"                    => "info",
-        "LOG_COMBINED"                 => true,
     );
     foreach ($defaultValues as $key => $value) {
         if (!defined($key))
@@ -109,9 +107,6 @@ class GlobalConfig {
     public $SEARCH_ENGINE = SEARCH_ENGINE;
     public $BASEURL = BASEURL;
     public $DEFAULT_LOOKUP_LANGUAGE = DEFAULT_LOOKUP_LANGUAGE;
-    public $LOG_LEVEL = LOG_LEVEL;
-    public $LOG_COMBINED = LOG_COMBINED;
-
 
     function __construct() {
         $this->loadConfig();

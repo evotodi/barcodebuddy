@@ -16,8 +16,6 @@
  * @since      File available since Release 1.6
  */
 
-require_once __DIR__ . '/logging.inc.php';
-
 class InvalidServerResponseException extends Exception {
 }
 
@@ -52,7 +50,6 @@ class CurlGenerator {
     private $method;
     private $urlApi;
     private $ignoredResultCodes = array(400);
-    private \Monolog\Logger $logger;
 
     const IGNORED_API_ERRORS_REGEX = array(
         '/No product with barcode .+ found/'
@@ -77,7 +74,6 @@ class CurlGenerator {
                          array  $formData = null, string $userAgent = null,
                          array  $headers = null) {
         global $CONFIG;
-        $this->logger = bb_logger('curl');
 
         $config = BBConfig::getInstance();
 
@@ -150,8 +146,6 @@ class CurlGenerator {
      * @throws UnauthorizedException
      */
     public function execute(bool $decode = false) {
-        $this->logger->debug("Executing curl for " . $this->urlApi);
-
         if (DISPLAY_DEBUG) {
             $startTime = microtime(true);
             DatabaseConnection::getInstance()->saveLog("<i>Executing API call: " . $this->urlApi . "</i>", false, false, true);
@@ -165,7 +159,6 @@ class CurlGenerator {
             if (DISPLAY_DEBUG) {
                 DatabaseConnection::getInstance()->saveLog($curlResult);
             }
-            $this->logger->error("API call failed with error: ".$jsonDecoded->response->errormessage);
             throw new InvalidJsonResponseException($jsonDecoded->response->errormessage);
         }
 
@@ -179,7 +172,6 @@ class CurlGenerator {
                 if (DISPLAY_DEBUG) {
                     DatabaseConnection::getInstance()->saveLog($curlResult);
                 }
-                $this->logger->error("API call failed with error: ".$jsonDecoded["error_message"]);
                 throw new InvalidJsonResponseException($jsonDecoded["error_message"]);
             }
         }
@@ -210,7 +202,6 @@ class CurlGenerator {
     private function checkForErrorsAndThrow($curlResult): void {
         $curlError    = curl_errno($this->ch);
         $responseCode = curl_getinfo($this->ch, CURLINFO_RESPONSE_CODE);
-        $this->logger->debug("Response code: ".$responseCode." Error: ".$curlError);
 
         if (in_array($responseCode, $this->ignoredResultCodes))
             return;
