@@ -20,3 +20,12 @@ function generateQuantityBarcodes() {
         JsBarcode(elId, barcode, {format: "CODE128", text: "Qty: " + i});
     }
 }
+
+function generateActionBarcodes() {
+    const actions = JSON.parse(document.getElementById("action-barcodes").dataset.actions);
+
+    Object.entries(actions).forEach(([key, action]) => {
+        const elId = "#action-" + key;
+        JsBarcode(elId, action.barcode, {format: "CODE128", text: action.name});
+    });
+}

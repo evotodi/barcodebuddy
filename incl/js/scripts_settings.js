@@ -1,3 +1,7 @@
+function showActionBarcodes() {
+    window.open('/barcodes.php?mode=act', '_blank');
+}
+
 function showTransferBarcodes() {
     window.open('/barcodes.php?mode=loc', '_blank');
 }
