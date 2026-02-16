@@ -22,6 +22,7 @@ require_once __DIR__ . "/db.inc.php";
 require_once __DIR__ . "/config.inc.php";
 require_once __DIR__ . "/redis.inc.php";
 require_once __DIR__ . "/curl.inc.php";
+require_once __DIR__ . "/logging.inc.php";
 
 const API_O_BARCODES       = 'objects/product_barcodes';
 const API_O_PRODUCTS       = 'objects/products';
@@ -43,6 +44,8 @@ const LOGIN_URL     = "loginurl";
 const LOGIN_API_KEY = "loginkey";
 
 const DISPLAY_DEBUG = false;
+
+$logApi = bb_logger('api');
 
 class GrocyProduct {
     public int $id;

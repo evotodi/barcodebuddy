@@ -26,15 +26,21 @@
 
 
 require_once __DIR__ . '/incl/configProcessing.inc.php';
+require_once __DIR__ . '/incl/logging.inc.php';
 require_once __DIR__ . '/incl/websocketconnection.inc.php';
 require_once __DIR__ . '/incl/internalChecking.inc.php';
 
+$log = bb_logger('ws');
+
 if (checkExtensionsInstalled()["result"] != RESULT_ALL_INSTALLED) {
+    $log->error("Not all required extensions are installed. Please run setup.php for more information.");
     die("Not all required extensions are installed. Please run setup.php for more information.");
 }
 
 $address = '127.0.0.1';
 $port    = $CONFIG->PORT_WEBSOCKET_SERVER;
+
+$log->info("Starting socket server", array("address" => $address, "port" => $port));
 
 echo "Starting socket server on $address:$port\n";
 
@@ -111,6 +117,7 @@ while (true) {
                     break;
                 // Invalid command
                 default:
+                    $log->warning("Unknown websocket command", array("buffer" => $buf));
                     echo "Unknown command " . $buf;
             }
         }
@@ -124,8 +131,9 @@ function sendMode(): void {
 }
 
 function sendMessage(string $msg): void {
-    global $clients;
+    global $clients, $log;
 
+    $log->debug("Sending message", array("message" => $msg));
     foreach ($clients as $changed_socket) {
         @socket_write($changed_socket, $msg, strlen($msg));
     }
@@ -135,7 +143,10 @@ function sendMessage(string $msg): void {
  * @return never
  */
 function showErrorAndDie(string $functionName): void {
+    global $log;
+
     echo $functionName . " failed. Reason: " . socket_strerror(socket_last_error()) . "\n";
+    $log->error("Socket error", array("function" => $functionName, "reason" => $reason));
     sleep(5);
     die();
 }

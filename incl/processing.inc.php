@@ -21,7 +21,9 @@ require_once __DIR__ . "/db.inc.php";
 require_once __DIR__ . "/config.inc.php";
 require_once __DIR__ . "/lookupProviders/BarcodeLookup.class.php";
 require_once __DIR__ . "/modules/choreManager.php";
+require_once __DIR__ . "/logging.inc.php";
 
+$procLog = bb_logger('processing');
 
 /**
  *
@@ -33,6 +35,8 @@ require_once __DIR__ . "/modules/choreManager.php";
  * @throws DbConnectionDuringEstablishException
  */
 function processNewBarcode(string $barcodeInput, ?string $bestBeforeInDays = null, ?string $price = null): string {
+    global $procLog;
+
     $db     = DatabaseConnection::getInstance();
     $config = BBConfig::getInstance();
 
@@ -67,15 +71,19 @@ function processNewBarcode(string $barcodeInput, ?string $bestBeforeInDays = nul
     }
     if (stringStartsWith($barcode, $config["BARCODE_TXFR"])) {
         $destId = intval(str_replace($config["BARCODE_TXFR"], "", $barcode));
+        $procLog->debug("Scan set destination to ".$destId);
         $txfrDest = $db->getTransferDestination();
+        $procLog->debug("Current destination is ".$txfrDest->id);
 
         if ($txfrDest->id !== $destId) {
             $location = API::getLocation($destId);
+            $procLog->debug("Api location = ".print_r($location, true));
             if (null !== $location->id) {
                 $txfrDest->id = $location->id;
                 $txfrDest->name = $location->name;
                 $db->setTransferDestination($destId, $location->name);
             } else {
+                $procLog->warning("Invalid destination location: ".$destId);
                 $log = new LogOutput("Invalid destination location: ".$destId, EVENT_TYPE_ERROR, null, true);
                 return $log
                     ->setVerbose()
@@ -103,11 +111,13 @@ function processNewBarcode(string $barcodeInput, ?string $bestBeforeInDays = nul
 
     if (trim($barcode) == "") {
         $log = new LogOutput("Invalid barcode found", EVENT_TYPE_ERROR);
+        $procLog->warning("Invalid barcode found: ".$barcode);
         return $log->setVerbose()->setWebsocketResultCode(WS_RESULT_PRODUCT_UNKNOWN)->createLog();
     }
 
     if (ChoreManager::isChoreBarcode($barcode)) {
         $choreText = processChoreBarcode($barcode);
+        $procLog->debug("Executed chore: ".$choreText);
         $log       = new LogOutput("Executed chore: " . $choreText, EVENT_TYPE_EXEC_CHORE);
         return $log->setVerbose()->createLog();
     }
@@ -127,6 +137,8 @@ function processNewBarcode(string $barcodeInput, ?string $bestBeforeInDays = nul
 
 
 function createLogModeChange(int $state, ?string $extra = null): string {
+    global $procLog;
+
     $text = "Set state to ";
     switch ($state) {
         case STATE_CONSUME:
@@ -154,12 +166,14 @@ function createLogModeChange(int $state, ?string $extra = null): string {
             $text .= "Transfer";
             break;
         default:
+            $procLog->warning("Invalid state: ".$state);
             throw new Exception("Invalid state");
     }
     if ($extra != null) {
         $text .= $extra;
     }
 
+    $procLog->debug($text);
     $log = new LogOutput($text, EVENT_TYPE_MODE_CHANGE);
     return $log->setVerbose()->createLog();
 }
@@ -392,6 +406,8 @@ function processRefreshedBarcode(string $barcode): void {
  * @throws DbConnectionDuringEstablishException
  */
 function processKnownBarcode(GrocyProduct $productInfo, string $barcode, bool $websocketEnabled, LockGenerator &$fileLock, ?string $bestBeforeInDays, ?string $price): string {
+    global $procLog;
+
     $config = BBConfig::getInstance();
     $db     = DatabaseConnection::getInstance();
 
@@ -557,6 +573,7 @@ function processKnownBarcode(GrocyProduct $productInfo, string $barcode, bool $w
             try {
                 API::transferProduct($productInfo->id, $productInfo->location->id, $transferDest->id);
             } catch (\Throwable $e) {
+                $procLog->error("Transfer failed: " . $e->getMessage());
                 return (new LogOutput("Transfer failed: " . $e->getMessage(), EVENT_TYPE_TRANSFER_PRODUCT))
                     ->setWebsocketResultCode(WS_RESULT_TXFR_INVALID)
                     ->setVerbose()
@@ -629,7 +646,9 @@ function sanitizeString(?string $input, bool $strongFilter = false): ?string {
  * @return int Returns value as int if valid
  */
 function checkIfNumeric(string $input): int {
+    global $procLog;
     if (!is_numeric($input) && $input != "") {
+        $procLog->error("Illegal input! " . sanitizeString($input) . " needs to be a number");
         die("Illegal input! " . sanitizeString($input) . " needs to be a number");
     }
     return intval($input);
