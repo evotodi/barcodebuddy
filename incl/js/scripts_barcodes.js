@@ -29,3 +29,31 @@ function generateActionBarcodes() {
         JsBarcode(elId, action.barcode, {format: "CODE128", text: action.name});
     });
 }
+
+function downloadBarcode(elId) {
+    // Get the image element
+    const img = document.getElementById(elId);
+    const barcodeName = img.dataset.name;
+
+    // Ask the user for confirmation before downloading
+    const filename = getBarcodeFilename(barcodeName);
+    if (!window.confirm(`Download "${filename}"?`)) {
+        return;
+    }
+
+    const imageDataUrl = img.src;
+
+    // Create a temporary anchor element
+    const link = document.createElement('a');
+    link.href = imageDataUrl;
+    link.download = filename;
+
+    // Append the link to the body (necessary for Firefox)
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function getBarcodeFilename(name) {
+    return "barcode_" + name.replace(/[^a-zA-Z0-9]/g, '') + ".png";
+}
