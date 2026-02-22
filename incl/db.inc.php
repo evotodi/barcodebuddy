@@ -189,7 +189,7 @@ class DatabaseConnection {
     private function initDb(): void {
         global $CONFIG;
 
-        $this->logger->debug("Initializing database");
+        $this->logger->debug("Initializing database", ['class' => __CLASS__, 'function' => __FUNCTION__]);
 
         self::checkPermissions();
         $this->db = new SQLite3($CONFIG->DATABASE_PATH);
@@ -600,7 +600,7 @@ class DatabaseConnection {
      * @throws DbConnectionDuringEstablishException
      */
     public function saveLog(string $log, bool $isVerbose = false, bool $isError = false, bool $isDebug = false): void {
-        $this->logger->debug($log);
+        $this->logger->debug($log, ['class' => __CLASS__, 'function' => __FUNCTION__]);
 
         if ($isVerbose == false || BBConfig::getInstance()["MORE_VERBOSE"] == true) {
             $date = date('Y-m-d H:i:s');

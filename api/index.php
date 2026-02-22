@@ -81,7 +81,7 @@ class BBuddyApi {
     function execute(string $url): void {
         global $CONFIG;
 
-        $this->logger->debug("API call: " . $url);
+        $this->logger->debug("API call: " . $url, ['class' => __CLASS__, 'function' => __FUNCTION__]);
 
         //Turn off all error reporting, as it could cause problems with parsing json clientside
         if (!$CONFIG->IS_DEBUG)
@@ -126,12 +126,18 @@ class BBuddyApi {
     private function initRoutes(): void {
         $this->addRoute(new ApiRoute("/action/scan", function () {
             $barcode = "";
-            if (isset($_GET["text"]))
+            if (isset($_GET["text"])) {
                 $barcode = $_GET["text"];
-            if (isset($_GET["add"]))
+            }
+
+            if (isset($_GET["add"])) {
                 $barcode = $_GET["add"];
-            if (isset($_POST["barcode"]))
+            }
+
+            if (isset($_POST["barcode"])) {
                 $barcode = $_POST["barcode"];
+            }
+
             if ($barcode == "") {
                 $this->logger->warning("No barcode supplied");
                 return self::createResultArray(null, "No barcode supplied", 400);
@@ -154,7 +160,7 @@ class BBuddyApi {
                         return self::createResultArray(null, "Invalid parameter price: needs to be type float", 400);
                     }
                 }
-                $this->logger->debug(sprintf("Scanning barcode: %s with bestBefore: %d days, price: %.2f", $barcode, $bestBefore, $price));
+                $this->logger->debug(sprintf("Scanning barcode: %s with bestBefore: %d days, price: %.2f", $barcode, $bestBefore, $price), ['class' => __CLASS__, 'function' => __FUNCTION__]);
                 $result = processNewBarcode(sanitizeString($barcode), $bestBefore, $price);
                 return self::createResultArray(array("result" => sanitizeString($result)));
             }
@@ -178,6 +184,7 @@ class BBuddyApi {
                 $this->logger->warning("Invalid state provided");
                 return self::createResultArray(null, "Invalid state provided", 400);
             } else {
+                $this->logger->debug("Setting transaction mode to " . $state, ['class' => __CLASS__, 'function' => __FUNCTION__]);
                 DatabaseConnection::getInstance()->setTransactionState(intval($state));
                 return self::createResultArray();
             }

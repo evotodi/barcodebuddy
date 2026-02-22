@@ -133,7 +133,7 @@ function sendMode(): void {
 function sendMessage(string $msg): void {
     global $clients, $log;
 
-    $log->debug("Sending message", array("message" => $msg));
+    $log->debug("Sending message", array("message" => $msg), ['class' => __CLASS__, 'function' => __FUNCTION__]);
     foreach ($clients as $changed_socket) {
         @socket_write($changed_socket, $msg, strlen($msg));
     }

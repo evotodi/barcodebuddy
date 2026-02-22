@@ -150,7 +150,7 @@ class CurlGenerator {
      * @throws UnauthorizedException
      */
     public function execute(bool $decode = false) {
-        $this->logger->debug("Executing curl for " . $this->urlApi);
+        $this->logger->debug("Executing curl for " . $this->urlApi, ['class' => __CLASS__, 'function' => __FUNCTION__]);
 
         if (DISPLAY_DEBUG) {
             $startTime = microtime(true);
@@ -210,7 +210,7 @@ class CurlGenerator {
     private function checkForErrorsAndThrow($curlResult): void {
         $curlError    = curl_errno($this->ch);
         $responseCode = curl_getinfo($this->ch, CURLINFO_RESPONSE_CODE);
-        $this->logger->debug("Response code: ".$responseCode." Error: ".$curlError);
+        $this->logger->debug("Response code: ".$responseCode." Error: ".$curlError, ['class' => __CLASS__, 'function' => __FUNCTION__]);
 
         if (in_array($responseCode, $this->ignoredResultCodes))
             return;
