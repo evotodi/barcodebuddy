@@ -37,6 +37,8 @@ $procLog = bb_logger('processing');
 function processNewBarcode(string $barcodeInput, ?string $bestBeforeInDays = null, ?string $price = null): string {
     global $procLog;
 
+    $procLog->debug("Processing barcode: ".$barcodeInput, ['class' => __CLASS__, 'function' => __FUNCTION__, 'line' => __LINE__]);
+
     $db     = DatabaseConnection::getInstance();
     $config = BBConfig::getInstance();
 
@@ -71,13 +73,13 @@ function processNewBarcode(string $barcodeInput, ?string $bestBeforeInDays = nul
     }
     if (stringStartsWith($barcode, $config["BARCODE_TXFR"])) {
         $destId = intval(str_replace($config["BARCODE_TXFR"], "", $barcode));
-        $procLog->debug("Scan set destination to ".$destId);
+        $procLog->debug("Scan set destination to ".$destId, ['class' => __CLASS__, 'function' => __FUNCTION__]);
         $txfrDest = $db->getTransferDestination();
-        $procLog->debug("Current destination is ".$txfrDest->id);
+        $procLog->debug("Current destination is ".$txfrDest->id, ['class' => __CLASS__, 'function' => __FUNCTION__]);
 
         if ($txfrDest->id !== $destId) {
             $location = API::getLocation($destId);
-            $procLog->debug("Api location = ".print_r($location, true));
+            $procLog->debug("Api location = ".print_r($location, true), ['class' => __CLASS__, 'function' => __FUNCTION__]);
             if (null !== $location->id) {
                 $txfrDest->id = $location->id;
                 $txfrDest->name = $location->name;
@@ -117,7 +119,7 @@ function processNewBarcode(string $barcodeInput, ?string $bestBeforeInDays = nul
 
     if (ChoreManager::isChoreBarcode($barcode)) {
         $choreText = processChoreBarcode($barcode);
-        $procLog->debug("Executed chore: ".$choreText);
+        $procLog->debug("Executed chore: ".$choreText, ['class' => __CLASS__, 'function' => __FUNCTION__]);
         $log       = new LogOutput("Executed chore: " . $choreText, EVENT_TYPE_EXEC_CHORE);
         return $log->setVerbose()->createLog();
     }
@@ -173,7 +175,7 @@ function createLogModeChange(int $state, ?string $extra = null): string {
         $text .= $extra;
     }
 
-    $procLog->debug($text);
+    $procLog->debug($text, ['class' => __CLASS__, 'function' => __FUNCTION__]);
     $log = new LogOutput($text, EVENT_TYPE_MODE_CHANGE);
     return $log->setVerbose()->createLog();
 }
